@@ -5077,9 +5077,10 @@ for epoch in range(num_epochs):
         acc = Accuracy(batch_xs, batch_ys)
         total_acc += acc
     print('Epoch: {:04d}, Cost: {:.9f}, Acc: {:.4f}'.format(epoch + 1, cost_sum, total_acc/num_batch))
-    log.write('Epoch: {:04d}, Cost: {:.9f}, Acc: {:.4f}'.format(epoch + 1, cost_sum, total_acc/num_batch))
+    log.write('Epoch: {:04d}, Cost: {:.9f}, Acc: {:.4f}\n'.format(epoch + 1, cost_sum, total_acc/num_batch))
 
 print('Learning finished')
 acc = Accuracy(x_test, y_test)
 print('Accuracy = {:.4f}'.format(acc))
-log.write('Accuracy = {:.4f}'.format(acc))
+log.write('Accuracy = {:.4f}\n'.format(acc))
+log.close()
