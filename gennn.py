@@ -80,7 +80,7 @@ for i in range(num_inputs + num_outputs, num_nodes):
             else:
                 output.write(" + node{}(X)*W[{}]".format(u, g[u][v]))
     output.write("\n")
-    output.write("    return(result)\n\n")
+    output.write("    return(tf.nn.relu(result))\n\n")
 
 
 output.write("@tf.function\n")
