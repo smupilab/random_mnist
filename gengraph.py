@@ -39,12 +39,12 @@ output.write("{} {} {} {}\n".format(num_inputs, num_outputs, num_hiddennodes, nu
 edges = 0
 G = [[False]*num_nodes for _ in range(num_nodes)]
 
-for i in range(num_outputs):
-    u = random.randrange(num_inputs)
-    v = i + num_inputs
-    G[u][v] = True
-    output.write("{} {}\n".format(u, v))
-    edges = edges + 1
+#for i in range(num_outputs):
+#    u = random.randrange(num_inputs)
+#    v = i + num_inputs
+#    G[u][v] = True
+#    output.write("{} {}\n".format(u, v))
+#    edges = edges + 1
  
 while(edges < num_edges):
     u = random.randrange(num_nodes)
