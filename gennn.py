@@ -1,6 +1,6 @@
 import random
 import sys
-import Queue
+import queue
 
 if len(sys.argv) != 2:
     print("Usage: python genn.py <graph file name>")
@@ -62,7 +62,7 @@ for i in range(num_inputs):
 output.write("\n")
 
 # hidden nodes (via BFS)
-q = Queue.Queue()
+q = queue.Queue()
 buf = []
 for i in range(num_outputs):
     q.put(i + num_inputs) # output nodes
