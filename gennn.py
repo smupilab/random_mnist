@@ -1,35 +1,23 @@
+import networkx as nx
 import random
 import sys
 import queue
 
 if len(sys.argv) != 2:
-    print("Usage: python genn.py <graph file name>")
+    print("Usage: python genn.py <graph pickle file name>")
     quit()
 
 batch_size = 100
 numepochs = 20
 
 graph_fname = sys.argv[1]
-graph = open(graph_fname, "r");
+G = nx.read_gpickle(graph_fname)
 
-lines = graph.readlines()
-num_inputs, num_outputs, num_hiddennodes, num_edges = lines[1].split(" ")
-num_inputs = int(num_inputs)
-num_outputs = int(num_outputs)
-num_hiddennodes = int(num_hiddennodes)
-num_edges = int(num_edges)
+num_inputs = 28 * 28
+num_outputs = 10
+num_hiddennodes = G.number_of_nodes() - num_inputs - num_outputs
+num_edges = G.number_of_edges()
 num_nodes = num_inputs + num_outputs + num_hiddennodes
-g = [[-1]*num_nodes for _ in range(num_nodes)]
-
-for i in range(num_edges):
-    u, v = lines[i+2].split(" ")
-    g[int(u)][int(v)] = i
-
-inedges = [[] for _ in range(num_nodes)]
-for u in range(num_nodes):
-    for v in range(num_nodes):
-        if g[u][v] != -1:
-            inedges[v].append(u)
 
 out_fname = "randnn_{}_{}.py".format(num_hiddennodes, num_edges)
 log_fname = "randnn_{}_{}.log".format(num_hiddennodes, num_edges)
@@ -58,44 +46,30 @@ output.write("\n")
 
 # input
 for i in range(num_inputs):
-    output.write("out{} = tf.gather(flat_input, [{}], axis=1)\n".format(i, i))
+    output.write("X_{} = tf.gather(flat_input, [{}], axis=1)\n".format(i, i))
 output.write("\n")
 
-# hidden nodes (via BFS)
-q = queue.Queue()
-buf = []
-for i in range(num_outputs):
-    q.put(i + num_inputs) # output nodes
-while(not q.empty()):
-    v = q.get() 
-    if len(inedges[v]) > 0:
-        line = "out{} = tf.keras.layers.Dense(1, activation='relu')(tf.concat([".format(v)
+for n in nx.topological_sort(G):
+    if (n[0] != "X"):
+        output.write("{} = tf.keras.layers.Dense(1, activation='relu')(tf.concat([".format(n))
         # edge u -> v
-        for u in range(len(inedges[v])-1):
-            line += "out{}, ".format(inedges[v][u])
-            q.put(inedges[v][u])
-            ## print("q.put {}".format(inedges[v][u]))
-        line += "out{}], 1))\n".format(inedges[v][-1])
-        q.put(inedges[v][-1])
-        buf.append(line)
-
-while(len(buf) > 0):
-    output.write(buf.pop())
-output.write("\n")
+        E = list(G.in_edges(n))
+        for u in range(len(E)-1):
+            output.write("{}, ".format(E[u][0]))
+        output.write("{}], 1))\n".format(E[-1][0]))
 
 # final layer
 output.write("final_nodes = tf.concat([")
-for i in range(num_outputs - 1):
-    v = i + num_inputs    # output node number
-    output.write("out{}, ".format(v))
-output.write("out{}], 1)\n".format(num_inputs + num_outputs - 1))
+for o in range(9):
+    output.write("O_{}, ".format(o))
+output.write("O_9], 1)\n")
 output.write("\n")
 
 output.write("final_output = tf.nn.softmax(final_nodes, axis=1)\n")
 output.write("\n")
 output.write("model = tf.keras.Model(model_input, final_output)\n")
 output.write("model.compile(optimizer='sgd', loss='sparse_categorical_crossentropy', metrics=['accuracy'])\n")
-output.write("model.summary()\n")
+output.write("## model.summary()\n")
 output.write("print('Training started')\n")
 output.write("model.fit(x_train, y_train, epochs={}, verbose=1, validation_data=(x_test, y_test))\n".format(numepochs))
 output.write("test_loss, test_acc = model.evaluate(x_test, y_test, verbose=2)\n")
